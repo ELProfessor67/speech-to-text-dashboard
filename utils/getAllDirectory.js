@@ -1,6 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 
+const parseDate = (dateStr) => {
+  const [year, month, day] = dateStr.split('-');
+  return new Date(year, month - 1, day).getTime();
+};
 
 export const listFilesAndDirectories = (dirPath,results=[]) => {
   
@@ -17,8 +21,9 @@ export const listFilesAndDirectories = (dirPath,results=[]) => {
       results.push({ isFolder: true,path:fullPath,name: item,children: subfolder});
     } else if (stat.isFile()) {
       const name = item.split('@date')[1]
+      const creationDate = item.split('@date')[0]
     
-      results.push({isFolder: false,path:fullPath,name});
+      results.push({isFolder: false,path:fullPath,name,creationDate});
     }
   });
 
@@ -45,7 +50,7 @@ export const getFileWithWord = async (word,dirPath,results) => {
         const start = index-80 >= 0 ? (index-80) : 0;
         let content = fileContent.slice(start,index+80)
         content = content.toLocaleLowerCase().replaceAll(word.toLocaleLowerCase(),`<span style="background: red;">${word}</span>`);
-        results.push({path:fullPath,name:item.split('@date')[1],content});
+        results.push({path:fullPath,name:item.split('@date')[1],content,creationDate:item.split('@date')[0]});
       }
     }
   }
@@ -69,7 +74,7 @@ export const getFilePerticularWithWord = async (word,path) => {
 
 
 
-export const getFileWithDate = async (date,dirPath,results) => {
+export const getFileWithDate = async (date,enddate,dirPath,results) => {
   const items = fs.readdirSync(dirPath);
 
   for (let i = 0; i < items.length; i++) {
@@ -79,14 +84,18 @@ export const getFileWithDate = async (date,dirPath,results) => {
     const stat = fs.statSync(fullPath);
 
     if (stat.isDirectory()) {
-      await getFileWithDate(date,fullPath,results);
+      await getFileWithDate(date,enddate,fullPath,results);
      
     } else if (stat.isFile()) {
       const fileDate = item.split('@date')[0];
       const [fdays,fmonth,fyear] = fileDate?.split('-');
-      const [uyear,umonth,udays] = date.split('-');
-      if(Number(fdays) === Number(udays) && Number(umonth) === Number(fmonth) && Number(uyear) == Number(fyear)){
-        results.push({path:fullPath,name:item.split('@date')[1]});
+      const startDateObj = parseDate(date);
+      const endDateObj = parseDate(enddate);
+      const fileDateObj = parseDate(`${fyear}-${fmonth}-${fdays}`);
+      
+      
+      if (fileDateObj >= startDateObj && fileDateObj <= endDateObj) {
+        results.push({path:fullPath,name:item.split('@date')[1],creationDate:item.split('@date')[0]});
       }
     }
   }
@@ -97,10 +106,10 @@ export const getFileWithDate = async (date,dirPath,results) => {
 
 
 
-export const getFilePerticularWithDate = async (date,path) => {
+export const getFilePerticularWithDate = async (date,enddate,path) => {
   const results = [];
   console.log(date)
-  await getFileWithDate(date,path,results)
+  await getFileWithDate(date,enddate,path,results)
   return results;
 
 }

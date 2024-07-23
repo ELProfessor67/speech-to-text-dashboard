@@ -87,8 +87,9 @@ export const getFileWithWord = async (req, res) => {
 export const getFileWithDate = async (req, res) => {
   try {
     const date = req.query.date;
+    const enddate = req.query.enddate
     const rootDirectoryName = process.env.FOLDER_DIR_PATH
-    const files = await getFilePerticularWithDate(date,path.join(__dirname,rootDirectoryName))
+    const files = await getFilePerticularWithDate(date,enddate,path.join(__dirname,rootDirectoryName))
     res.status(200).json({
       success: true,
       files

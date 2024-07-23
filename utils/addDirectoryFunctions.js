@@ -14,15 +14,22 @@ function formatDate(date) {
 export const addFile = async (file) => {
     const path = file.path;
     const date = file.birthdate;
-    console.log(date)
-    console.log(path)
+    
 
-    const folders = path.split('\\');
+
+    const mode = process.env.MODE;
+    let folders;
+    if(mode == 'dev'){
+        folders = path.split('\\');
+    }else{
+        folders = path.split('/');
+    }
+
     const filename = folders.pop();
 
     for (let i = 0; i < folders.length; i++) {
         const element = folders[i];
-        if(element == '.') continue;
+        if(element == '.' || element == '') continue;
         
         const tempPath = folders.slice(0,i+1).join('/');
         if(!fs.existsSync(tempPath)){
@@ -38,18 +45,7 @@ export const addFile = async (file) => {
     const file_path = folders.join('/') + `/${formatDate(creationDate)}@date` +  filename
     console.log(file_path)
     fs.writeFileSync(file_path,fileParserRef.buffer);
-    // exec(`python main.py --path ${file_path} --date ${date}`, (error, stdout, stderr) => {
-    //     if (error) {
-    //         console.error(`exec error: ${error}`);
-    //         return;
-    //     }
-    //     if (stderr) {
-    //         console.error(`stderr: ${stderr}`);
-    //         return;
-    //     }
-    //     console.log(`stdout: ${stdout}`);
-    // });
-    // return true
+
 
 
     const execPromise = (command) => {
@@ -66,8 +62,10 @@ export const addFile = async (file) => {
         });
     };
 
+
+    const pythonpath = mode == 'dev' ? 'python' : 'python3';
     try {
-        const result = await execPromise(`python main.py --path ${file_path} --date ${date}`);
+        const result = await execPromise(`${pythonpath} main.py --path ${file_path} --date ${date}`);
         console.log(`stdout: ${result}`);
         return true;
     } catch (err) {
