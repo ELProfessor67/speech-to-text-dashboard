@@ -87,3 +87,27 @@ export const logout = async (req, res, next) => {
 		message: 'Logout successfully'
 	})
 };
+
+
+export const changePassword = async (req, res, next) => {
+    try{
+        const {oldpassword, newpassword} = req.body;
+        const user = await UserModel.findById(req.user._id);
+
+      
+        
+        const isMatch = await user.comparePassword(oldpassword);
+        if (!isMatch)
+            return sendResponse(false, 401, 'Incorrect old password',res);
+        console.log(user)
+        user.password = newpassword;
+        await user.save();
+    
+        sendResponse(true,200,'Password update successfully',res);
+    } catch (error) {
+        res.status(501).json({
+            success: false,
+            message: error.message
+        })
+    }
+};

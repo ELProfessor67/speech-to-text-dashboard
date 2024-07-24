@@ -1,5 +1,5 @@
 import express from 'express';
-import { loadme, login, logout, register } from '../controllers/user.js';
+import { changePassword, loadme, login, logout, register } from '../controllers/user.js';
 import { isAuthenticate } from '../middwear.js';
 const userRouter = express.Router();
 
@@ -9,5 +9,6 @@ const userRouter = express.Router();
 userRouter.route('/login').post(login);
 userRouter.route('/me').get(isAuthenticate,loadme);
 userRouter.route('/logout').get(isAuthenticate,logout);
+userRouter.route('/change-password').post(isAuthenticate,changePassword);
 
 export default userRouter;
