@@ -1,7 +1,7 @@
 
 import path from 'path'
 import { addFile } from '../utils/addDirectoryFunctions.js';
-import { getFilePerticularWithDate, getFilePerticularWithWord, listFilesAndDirectories } from '../utils/getAllDirectory.js';
+import { getFilePerticularWithDate, getFilePerticularWithWord, listFilesAndDirectories, listFilesAndDirectoriesAndroid } from '../utils/getAllDirectory.js';
 const __dirname = path.resolve()
 import fs from 'fs'
 
@@ -21,6 +21,8 @@ export const uploadFolder = async (req, res) => {
       }else{
         element.path = path.join(rootDirectoryName,body[`path-${i}`])
       }
+      element.playform = body[`platform-${i}`] || 'default';
+      element.storepath = body[`storepath-${i}`] || undefined;
       element.birthdate = body[`date-${i}`]
       await addFile(element)
     }
@@ -38,10 +40,20 @@ export const uploadFolder = async (req, res) => {
 export const getFolder = async (req, res) => {
   try {
     const rootDirectoryName = process.env.FOLDER_DIR_PATH
-    const result = listFilesAndDirectories(path.join(__dirname,rootDirectoryName));
+    // const result = listFilesAndDirectories(path.join(__dirname,rootDirectoryName));
+    const android_directory = listFilesAndDirectoriesAndroid(path.join('/root/file-manager-api/eligindi/Calls'));
+    // res.status(200).json({
+    //   success: true,
+    //   folder: [...result,{
+    //     children: android_directory,
+    //     isFolder: true,
+    //     path: '/root/file-manager-api/eligindi/Calls',
+    //     name: 'Android',
+    //   }]
+    // })
     res.status(200).json({
       success: true,
-      folder: result
+      folder: android_directory
     })
   } catch (error) {
     res.status(501).json({
