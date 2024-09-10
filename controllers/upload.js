@@ -24,6 +24,8 @@ export const uploadFolder = async (req, res) => {
       element.playform = body[`platform-${i}`] || 'default';
       element.storepath = body[`storepath-${i}`] || undefined;
       element.birthdate = body[`date-${i}`]
+      element.creationDate = body[`creationdate-${i}`] || new Date().getTime()
+      element.time = body[`time-${i}`] || '170121';
       await addFile(element)
     }
 

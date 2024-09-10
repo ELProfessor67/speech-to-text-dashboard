@@ -1,5 +1,42 @@
+
 import fs from 'fs';
 import path from 'path';
+
+
+
+function searchFileInPaths(fileName, searchPath) {
+  let foundFile = null;
+
+  // Helper function to search files recursively
+  function searchDirectory(directory) {
+      const files = fs.readdirSync(directory);
+
+      for (const file of files) {
+          const fullPath = path.join(directory, file);
+
+          if (fs.statSync(fullPath).isDirectory()) {
+              // Recursively search in directories
+              if (searchDirectory(fullPath)) {
+                  return true;
+              }
+          } else if (file.includes(fileName)) {
+              // If the file name contains the search string, save its path and stop searching
+              foundFile = fullPath;
+              return true;
+          }
+
+          if (foundFile) return true;
+      }
+
+      return false;
+  }
+
+  if (fs.existsSync(searchPath)) {
+      searchDirectory(searchPath);
+  }
+
+  return foundFile; // Returns the file path or null if not found
+}
 
 function getPublicURL(filePath) {
   // Normalize the path to ensure consistency
@@ -42,11 +79,15 @@ export const listFilesAndDirectories = (dirPath,results=[]) => {
       listFilesAndDirectories(fullPath,subfolder); // Recursively list subdirectories and files
       results.push({ isFolder: true,path:fullPath,name: item,children: subfolder});
     } else if (stat.isFile()) {
-      const name = item.split('@date')[2];
+      const name = item.split('@date')[4];
       const creationDate = item.split('@date')[1];
       const platform = item.split('@date')[0];
+      const time = item.split('@date')[2]
+      const fileCreationDate = item.split('@date')[3]
+      
+     
     
-      results.push({isFolder: false,path:fullPath,name,creationDate,platform});
+      results.push({isFolder: false,path:fullPath,name,creationDate,platform,time,fileCreationDate});
     }
   });
 
@@ -66,11 +107,13 @@ export const listFilesAndDirectoriesAndroid = (dirPath,results=[]) => {
       listFilesAndDirectoriesAndroid(fullPath,subfolder); // Recursively list subdirectories and files
       results.push({ isFolder: true,path:fullPath,name: item,children: subfolder});
     } else if (stat.isFile()) {
-      const name = item.split('@date')[3];
+      const name = item.split('@date')[5];
       const creationDate = item.split('@date')[2];
       const platform = item.split('@date')[1];
       const path = Buffer.from(item.split('@date')[0], 'base64').toString('utf-8')?.replace('mp3','txt');
-      results.push({isFolder: false,path,name,creationDate,platform,audioPath: getPublicURL(fullPath)});
+      const time =  item.split('@date')[3]
+      const fileCreationDate = item.split('@date')[4]
+      results.push({isFolder: false,path,name,creationDate,platform,audioPath: getPublicURL(fullPath),time,fileCreationDate});
     }
   });
 
@@ -98,7 +141,12 @@ export const getFileWithWord = async (word,dirPath,results) => {
         let content = fileContent.slice(start,index+80)
         content = content.toLocaleLowerCase().replaceAll(word.toLocaleLowerCase(),`<span style="background: red;">${word}</span>`);
         const platform = item.split('@date')[0];
-        results.push({path:fullPath,name:item.split('@date')[2],content,creationDate:item.split('@date')[1],platform});
+        let audioPath = searchFileInPaths(item.replace('txt',''),'/root/file-manager-api/eligindi/Calls');
+        const fileCreationDate = item.split('@date')[3]
+        if(audioPath){
+          audioPath = getPublicURL(audioPath)
+        }
+        results.push({path:fullPath,name:item.split('@date')[4],content,creationDate:item.split('@date')[1],platform,audioPath,time:item.split('@date')[2],platform: item.split('@date')[0],fileCreationDate });
       }
     }
   }
@@ -135,20 +183,26 @@ export const getFileWithDate = async (date,enddate,dirPath,results) => {
       await getFileWithDate(date,enddate,fullPath,results);
      
     } else if (stat.isFile()) {
-      const fileDate = item.split('@date')[0];
+     
+      const fileDate = item.split('@date')[1];
+      if(!fileDate) return
       const [fdays,fmonth,fyear] = fileDate?.split('-');
       const startDateObj = parseDate(date);
       const endDateObj = parseDate(enddate);
       const fileDateObj = parseDate(`${fyear}-${fmonth}-${fdays}`);
-      
+      let audioPath = searchFileInPaths(item.replace('txt',''),'/root/file-manager-api/eligindi/Calls');
+      const fileCreationDate = item.split('@date')[3]
+      if(audioPath){
+        audioPath = getPublicURL(audioPath)
+      }
+
       
       if (fileDateObj >= startDateObj && fileDateObj <= endDateObj) {
         const platform = item.split('@date')[0];
-        results.push({path:fullPath,name:item.split('@date')[1],creationDate:item.split('@date')[0],platform});
+        results.push({path:fullPath,name:item.split('@date')[4],creationDate:item.split('@date')[1],platform,audioPath,time: item.split('@date')[2],platform:item.split('@date')[0],fileCreationDate });
       }
     }
   }
- 
 
   return results;
 };
@@ -157,7 +211,7 @@ export const getFileWithDate = async (date,enddate,dirPath,results) => {
 
 export const getFilePerticularWithDate = async (date,enddate,path) => {
   const results = [];
-  console.log(date)
+  console.log('call',enddate,path)
   await getFileWithDate(date,enddate,path,results)
   return results;
 

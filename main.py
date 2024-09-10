@@ -5,6 +5,16 @@ import os
 import shutil
 import base64
 import time
+import whisper
+
+model = whisper.load_model("small")
+
+def create_path_if_not_exists(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print(f"Path '{path}' created.")
+    else:
+        print(f"Path '{path}' already exists.")
 
 def move_file(file_path, destination_folder):
     try:
@@ -29,14 +39,16 @@ def convert_audio_to_text(file_path, date,storepath):
         audio.export(temp_wav, format="wav")
         
         # Load the temporary WAV file
-        with sr.AudioFile(temp_wav) as source:
-            audio_data = recognizer.record(source)
-            try:
-                text = recognizer.recognize_google(audio_data)
-            except sr.UnknownValueError:
-                text = "Google Speech Recognition could not understand the audio."
-            except sr.RequestError as e:
-                text = f"Could not request results from Google Speech Recognition service; {e}"
+        # with sr.AudioFile(temp_wav) as source:
+        #     audio_data = recognizer.record(source)
+        #     try:
+        #         text = recognizer.recognize_google(audio_data)
+        #     except sr.UnknownValueError:
+        #         text = "Google Speech Recognition could not understand the audio."
+        #     except sr.RequestError as e:
+        #         text = f"Could not request results from Google Speech Recognition service; {e}"
+        result = model.transcribe(temp_wav,language='en')
+        text = result['text']
         
         # Generate the .txt file path
         base_name = os.path.splitext(file_path)[0]
@@ -63,6 +75,7 @@ def convert_audio_to_text(file_path, date,storepath):
         filename = f"{base64_bytes}@date{filename}"
         
         os.rename(file_path,f"{directory}/{filename}")
+        create_path_if_not_exists(destination_folder)
         move_file(f"{directory}/{filename}", destination_folder)
         
     finally:

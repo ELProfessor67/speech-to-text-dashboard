@@ -57,6 +57,9 @@ export const addFile = async (file) => {
     const date = file.birthdate;
     const platform = file.playform;
     const storepath = file.storepath;
+    const time = file.time;
+    const fileCreationDate = new Date(+file.creationDate);
+    
 
 
     const mode = process.env.MODE;
@@ -68,6 +71,7 @@ export const addFile = async (file) => {
     }
 
     const filename = folders.pop();
+
 
     for (let i = 0; i < folders.length; i++) {
         const element = folders[i];
@@ -84,7 +88,7 @@ export const addFile = async (file) => {
  
      
     
-    let file_path = folders.join('/') + `/${platform}@date${formatDate(creationDate)}@date` +  filename
+    let file_path = folders.join('/') + `/${platform}@date${formatDate(creationDate)}@date${time}@date${formatDate(fileCreationDate)}@date` +  filename
     console.log(file_path)
     fs.writeFileSync(file_path,fileParserRef.buffer);
 
