@@ -21,6 +21,10 @@ app.use(cors({
     methods: ['GET','POST','PUT','DELETE'],
     credentials: true
 }))
+
+const rootPath = '/root/file-manager-api/eligindi'
+app.use('/public',express.static(rootPath))
+app.use(express.static(''))
 app.use(express.urlencoded({extended: true}))
 app.use(express.json())
 app.use(cookieParser())
