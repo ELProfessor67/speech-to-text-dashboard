@@ -6,8 +6,9 @@ import shutil
 import base64
 import time
 import whisper
+import json
 
-model = whisper.load_model("small")
+model = whisper.load_model("base")
 
 def create_path_if_not_exists(path):
     if not os.path.exists(path):
@@ -47,8 +48,30 @@ def convert_audio_to_text(file_path, date,storepath):
         #         text = "Google Speech Recognition could not understand the audio."
         #     except sr.RequestError as e:
         #         text = f"Could not request results from Google Speech Recognition service; {e}"
-        result = model.transcribe(temp_wav,language='en')
-        text = result['text']
+        result = model.transcribe(temp_wav,language='en',word_timestamps=True)
+        data = []
+
+        if 'segments' in result:
+            for segment in result['segments']:
+                if 'words' in segment:  # Check if 'words' exist in the segment
+                    for word in segment['words']:
+                        word_detail = [f"{word['word']}",f"{word['start']:.2f}"]
+                        data.append(word_detail)
+                        
+                else:
+                    print("No segments found in the transcription result.")
+        else:
+            print("No segments found in the transcription result.")
+        
+
+
+        text = ""
+        if len(data) != 0:
+            text = json.dumps(data)
+        else:
+            text = result['text']
+
+
         
         # Generate the .txt file path
         base_name = os.path.splitext(file_path)[0]

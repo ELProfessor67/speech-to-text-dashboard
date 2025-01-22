@@ -13,6 +13,8 @@ export const uploadFolder = async (req, res) => {
     const files = req.files || [];
     const body = req.body;
     const currentpath = req.body.currentpath
+    const result = []
+    
 
     for (let i = 0; i < files.length; i++) {
       const element = files[i];
@@ -26,10 +28,11 @@ export const uploadFolder = async (req, res) => {
       element.birthdate = body[`date-${i}`]
       element.creationDate = body[`creationdate-${i}`] || new Date().getTime()
       element.time = body[`time-${i}`] || '170121';
-      await addFile(element)
+      const res = await addFile(element)
+      result.push(res);
     }
 
-    res.send('add successfully')
+    res.status(200).json({result,message:'add successfully'})
   } catch (error) {
     res.status(501).json({
       success: false,
@@ -41,18 +44,10 @@ export const uploadFolder = async (req, res) => {
 
 export const getFolder = async (req, res) => {
   try {
+   
     const rootDirectoryName = process.env.FOLDER_DIR_PATH
-    // const result = listFilesAndDirectories(path.join(__dirname,rootDirectoryName));
     const android_directory = listFilesAndDirectoriesAndroid(path.join('/root/file-manager-api/eligindi/Calls'));
-    // res.status(200).json({
-    //   success: true,
-    //   folder: [...result,{
-    //     children: android_directory,
-    //     isFolder: true,
-    //     path: '/root/file-manager-api/eligindi/Calls',
-    //     name: 'Android',
-    //   }]
-    // })
+    console.log(android_directory)
     res.status(200).json({
       success: true,
       folder: android_directory

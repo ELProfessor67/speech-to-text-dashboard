@@ -134,8 +134,14 @@ export const getFileWithWord = async (word,dirPath,results) => {
       await getFileWithWord(word,fullPath,results);
      
     } else if (stat.isFile()) {
-      const fileContent = fs.readFileSync(fullPath,'utf-8');
-      if(fileContent?.toLocaleLowerCase().includes(word.toLocaleLowerCase())){
+      let fileContent = fs.readFileSync(fullPath,'utf-8')
+      if(fileContent){
+        fileContent = fileContent?.toLocaleLowerCase();
+        fileContent = JSON.parse(fullPath)
+        fileContent = fileContent.map(w => w[0].trim()).join(" ")
+      }
+      
+      if(fileContent?.toLocaleLowerCase().includes('"'+word.toLocaleLowerCase())+'"'){
         const index = fileContent.toLocaleLowerCase().indexOf(word.toLocaleLowerCase());
         const start = index-80 >= 0 ? (index-80) : 0;
         let content = fileContent.slice(start,index+80)

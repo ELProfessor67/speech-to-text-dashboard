@@ -1,7 +1,30 @@
 import fs from 'fs';
 import getDataUri from './dataURI.js';
 import { exec } from 'child_process';
+import path from 'path';
 
+
+function encodeBase64(str) {
+    return Buffer.from(str, 'utf-8').toString('base64');
+}
+
+function processFilePath(filePath, storePath) {
+    const destinationFolder = storePath ? storePath : "/root/file-manager-api/eligindi/Calls";
+    let directory = path.dirname(filePath);
+    const filename = path.basename(filePath);
+    directory = directory.replace('root','/public/Calls');
+    
+    // Convert file path to base64
+    let base64Bytes = encodeBase64(filePath);
+
+    // Clean up base64 encoding output
+    base64Bytes = base64Bytes.replace(/^b'|'/g, '');
+
+    // Final filename
+    const newFilename = `${base64Bytes}@date${filename}`;
+
+    return `${directory}/${newFilename}`;
+}
 
 
 function formatDate(date) {
@@ -17,9 +40,13 @@ function formatDate(date) {
     return new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {
             if (error) {
-                reject(`exec error: ${error}`);
+                console.log(error,'error')
+                // reject(`exec error: ${error}`);
+                resolve(stdout)
             } else if (stderr) {
-                reject(`stderr: ${stderr}`);
+                console.log(stderr,'stderr')
+                resolve(stdout);
+                // reject(`stderr: ${stderr}`);
             } else {
                 resolve(stdout);
             }
@@ -92,6 +119,7 @@ export const addFile = async (file) => {
     console.log(file_path)
     fs.writeFileSync(file_path,fileParserRef.buffer);
 
+
     if(filename?.includes('amr')){
         try {
             
@@ -114,6 +142,7 @@ export const addFile = async (file) => {
 
 
     const pythonpath = mode == 'dev' ? 'python' : 'python3';
+    console.log('111111111111111111111111111111111111111111111111111111111111111111111111')
     try {
         let result;
         if(storepath){
@@ -122,10 +151,17 @@ export const addFile = async (file) => {
              result = await execPromise(`${pythonpath} main.py --path ${file_path} --date ${date}`);
 
         }
+        console.log('22222222222222222222222222222222222222222222222222222222222222222222222')
         console.log(`stdout: ${result}`);
-        return true;
+        return {
+            path: file_path.replace('mp3','txt'),
+            filename: filename?.replace('amr','mp3'),
+            platform,
+            creationDate,
+            audioPath: processFilePath(file_path)
+        };
     } catch (err) {
-        console.error(err);
+        console.error(err.message);
         return false;
     }
 
